@@ -53,6 +53,11 @@ import type FragmentLoader from './loader/fragment-loader';
 import type { LevelDetails } from './loader/level-details';
 import type TaskLoop from './task-loop';
 import type TransmuxerInterface from './demux/transmuxer-interface';
+import { getAudioTracksByGroup } from './utils/rendition-helper';
+import {
+  getMediaDecodingInfoPromise,
+  MediaDecodingInfo,
+} from './utils/mediacapabilities-helper';
 
 /**
  * The `Hls` class is the core of the HLS.js library used to instantiate player instances.
@@ -946,7 +951,7 @@ export default class Hls implements HlsEventEmitter {
   /**
    * Get the complete list of audio tracks across all media groups
    */
-  get allAudioTracks(): Array<MediaPlaylist> {
+  get allAudioTracks(): MediaPlaylist[] {
     const audioTrackController = this.audioTrackController;
     return audioTrackController ? audioTrackController.allAudioTracks : [];
   }
@@ -954,7 +959,7 @@ export default class Hls implements HlsEventEmitter {
   /**
    * Get the list of selectable audio tracks
    */
-  get audioTracks(): Array<MediaPlaylist> {
+  get audioTracks(): MediaPlaylist[] {
     const audioTrackController = this.audioTrackController;
     return audioTrackController ? audioTrackController.audioTracks : [];
   }
@@ -980,7 +985,7 @@ export default class Hls implements HlsEventEmitter {
   /**
    * get the complete list of subtitle tracks across all media groups
    */
-  get allSubtitleTracks(): Array<MediaPlaylist> {
+  get allSubtitleTracks(): MediaPlaylist[] {
     const subtitleTrackController = this.subtitleTrackController;
     return subtitleTrackController
       ? subtitleTrackController.allSubtitleTracks
@@ -990,7 +995,7 @@ export default class Hls implements HlsEventEmitter {
   /**
    * get alternate subtitle tracks list from playlist
    */
-  get subtitleTracks(): Array<MediaPlaylist> {
+  get subtitleTracks(): MediaPlaylist[] {
     const subtitleTrackController = this.subtitleTrackController;
     return subtitleTrackController
       ? subtitleTrackController.subtitleTracks
@@ -1126,6 +1131,21 @@ export default class Hls implements HlsEventEmitter {
    */
   get interstitialsManager(): InterstitialsManager | null {
     return this.interstitialsController?.interstitialsManager || null;
+  }
+
+  /**
+   * returns mediaCapabilities.decodingInfo for a variant/rendition
+   */
+  getMediaDecodingInfo(
+    level: Level,
+    audioTracks: MediaPlaylist[] = this.allAudioTracks,
+  ): Promise<MediaDecodingInfo> {
+    const audioTracksByGroup = getAudioTracksByGroup(audioTracks);
+    return getMediaDecodingInfoPromise(
+      level,
+      audioTracksByGroup,
+      navigator.mediaCapabilities,
+    );
   }
 }
 
